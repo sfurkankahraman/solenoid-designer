@@ -1,0 +1,2195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solenoid Designer Pro v5.0</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0e0f1a;
+  --bg-secondary: #131420;
+  --bg-tertiary: #181924;
+  --bg-input: #1e2030;
+  --bg-card: #161722;
+  --accent-blue: #1a8fd1;
+  --accent-cyan: #00d4ff;
+  --accent-green: #2eb872;
+  --accent-amber: #f0a820;
+  --accent-red: #e04040;
+  --accent-copper: #c47a30;
+  --accent-purple: #8855cc;
+  --text-primary: #e8eaf0;
+  --text-secondary: #8a8fa8;
+  --text-muted: #505568;
+  --border: #252840;
+  --border-bright: #353860;
+  --grid: #1a1d2e;
+  --font-display: 'Orbitron', monospace;
+  --font-body: 'Rajdhani', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+  --glow-blue: 0 0 20px rgba(26,143,209,0.3);
+  --glow-cyan: 0 0 15px rgba(0,212,255,0.2);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── TOP BAR ─── */
+#topbar {
+  height: 52px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-bright);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+  flex-shrink: 0;
+  position: relative;
+}
+#topbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  opacity: 0.4;
+}
+.logo {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(0,212,255,0.5);
+  white-space: nowrap;
+}
+.logo span { color: var(--text-muted); font-weight: 400; font-size: 10px; letter-spacing: 1px; display: block; margin-top: -2px; }
+.topbar-sep { width: 1px; height: 28px; background: var(--border-bright); }
+.topbar-stat {
+  display: flex; flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.topbar-stat .label { color: var(--text-muted); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+.topbar-stat .value { color: var(--accent-cyan); font-size: 12px; }
+#topbar-status {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-green);
+  display: flex; align-items: center; gap: 6px;
+}
+#topbar-status::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ─── MAIN LAYOUT ─── */
+#app {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 310px 1fr 340px;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ─── LEFT PANEL ─── */
+#left-panel {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#left-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-bright) transparent;
+}
+#left-scroll::-webkit-scrollbar { width: 4px; }
+#left-scroll::-webkit-scrollbar-track { background: transparent; }
+#left-scroll::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 2px 6px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+}
+.section-header::before, .section-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-bright));
+}
+.section-header::before { background: linear-gradient(90deg, var(--border-bright), transparent); }
+
+.param-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 32px;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 2px;
+}
+.param-label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.param-unit {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+input[type="number"], select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+input[type="number"]:focus, select:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(26,143,209,0.15);
+}
+select { cursor: pointer; }
+select option { background: var(--bg-input); }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px;
+}
+.toggle-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-input);
+  border: 1px solid var(--border-bright);
+  border-radius: 9px;
+  transition: 0.2s;
+}
+.toggle-slider:before {
+  content: '';
+  position: absolute;
+  height: 12px; width: 12px;
+  left: 2px; bottom: 2px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: 0.2s;
+}
+.toggle input:checked + .toggle-slider { background: rgba(26,143,209,0.25); border-color: var(--accent-blue); }
+.toggle input:checked + .toggle-slider:before {
+  transform: translateX(18px);
+  background: var(--accent-cyan);
+  box-shadow: 0 0 6px var(--accent-cyan);
+}
+
+.btn {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #1a6fa0, #1a8fd1);
+  color: white;
+  box-shadow: var(--glow-blue);
+}
+.btn-primary:hover { background: linear-gradient(135deg, #1a8fd1, #00d4ff); box-shadow: 0 0 25px rgba(0,212,255,0.4); }
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { border-color: var(--border-bright); color: var(--text-primary); }
+.btn-warning {
+  background: var(--bg-tertiary);
+  color: var(--accent-amber);
+  border: 1px solid rgba(240,168,32,0.3);
+}
+.btn-warning:hover { border-color: var(--accent-amber); background: rgba(240,168,32,0.08); }
+.btn-danger {
+  background: var(--bg-tertiary);
+  color: var(--accent-red);
+  border: 1px solid rgba(224,64,64,0.3);
+}
+.btn-danger:hover { border-color: var(--accent-red); background: rgba(224,64,64,0.08); }
+
+#left-buttons { padding: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; }
+
+/* ─── CENTER PANEL ─── */
+#center-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+#viewport-3d {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+#three-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+.viewport-label {
+  position: absolute;
+  top: 12px; left: 16px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+}
+.viewport-hint {
+  position: absolute;
+  bottom: 10px; right: 14px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+/* ─── BOTTOM TABS ─── */
+#bottom-area {
+  height: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tab-bar {
+  display: flex;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tab-btn {
+  padding: 8px 16px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.tab-btn:hover { color: var(--text-secondary); }
+.tab-btn.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+.tab-content { display: none; flex: 1; padding: 10px 14px; min-height: 0; }
+.tab-content.active { display: flex; }
+.tab-content canvas { width: 100% !important; }
+
+/* ─── RIGHT PANEL (ANALYTICS) ─── */
+#right-panel {
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#analytics-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.analytics-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text-primary);
+}
+.analytics-subtitle {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+#analytics-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 14px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-bright) transparent;
+}
+#analytics-scroll::-webkit-scrollbar { width: 3px; }
+#analytics-scroll::-webkit-scrollbar-thumb { background: var(--border-bright); }
+
+.analytics-section {
+  margin-bottom: 10px;
+}
+.analytics-section-title {
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  padding: 6px 0 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(37,40,64,0.4);
+}
+.metric-name {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--accent-green);
+  text-align: right;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+.metric-value.warn { color: var(--accent-amber); }
+.metric-value.danger { color: var(--accent-red); }
+.metric-value.muted { color: var(--text-muted); }
+.metric-value.white { color: var(--text-primary); }
+
+.warning-box {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: rgba(240,168,32,0.07);
+  border: 1px solid rgba(240,168,32,0.2);
+  border-radius: 3px;
+}
+.warning-item {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-amber);
+  line-height: 1.6;
+}
+.warning-item::before { content: '>> '; }
+.ok-box {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: rgba(46,184,114,0.07);
+  border: 1px solid rgba(46,184,114,0.2);
+  border-radius: 3px;
+}
+.ok-item {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-green);
+}
+.ok-item::before { content: '✓ '; }
+
+/* ─── MODALS ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-bright);
+  border-radius: 6px;
+  padding: 24px;
+  min-width: 340px;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), var(--glow-blue);
+}
+.modal h2 {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--accent-cyan);
+  margin-bottom: 16px;
+}
+.modal textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 10px;
+  border-radius: 3px;
+  resize: vertical;
+  min-height: 200px;
+  outline: none;
+}
+.modal-btns { display: flex; gap: 8px; margin-top: 12px; }
+.modal-btns .btn { margin: 0; flex: 1; }
+
+/* Progress overlay */
+#progress-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#progress-overlay.hidden { display: none; }
+.progress-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-bright);
+  border-radius: 6px;
+  padding: 28px 36px;
+  text-align: center;
+  box-shadow: var(--glow-blue);
+}
+.progress-box h3 {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--accent-cyan);
+  margin-bottom: 12px;
+}
+.progress-track {
+  width: 260px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto 8px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+  border-radius: 2px;
+  transition: width 0.05s;
+  box-shadow: 0 0 10px var(--accent-cyan);
+}
+.progress-pct {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* spacer */
+.spacer4 { height: 4px; }
+.spacer8 { height: 8px; }
+
+/* MC result charts */
+#mc-modal .modal { min-width: 680px; max-width: 700px; }
+.mc-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.mc-chart-box { background: var(--bg-tertiary); border-radius: 4px; padding: 10px; }
+.mc-chart-box canvas { max-height: 140px; }
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="logo">SOLENOID DESIGNER PRO<span>GRADIOMETRIC EDITION v5.0</span></div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-stat"><span class="label">Inductance</span><span class="value" id="tb-L">---</span></div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-stat"><span class="label">Q Factor</span><span class="value" id="tb-Q">---</span></div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-stat"><span class="label">SRF</span><span class="value" id="tb-SRF">---</span></div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-stat"><span class="label">R_AC</span><span class="value" id="tb-RAC">---</span></div>
+  <div id="topbar-status">LIVE COMPUTE</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- LEFT PANEL -->
+  <div id="left-panel">
+    <div id="left-scroll">
+
+      <div class="section-header">Geometry</div>
+
+      <div class="param-row">
+        <span class="param-label">Inner Radius</span>
+        <input type="number" id="p-innerRadius" value="22" min="1" max="200" step="0.5">
+        <span class="param-unit">mm</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Coil Length</span>
+        <input type="number" id="p-length" value="100" min="5" max="500" step="1">
+        <span class="param-unit">mm</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Turns / Layer</span>
+        <input type="number" id="p-numTurns" value="82" min="1" max="500" step="1">
+        <span class="param-unit"></span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Layers</span>
+        <input type="number" id="p-numLayers" value="2" min="1" max="20" step="1">
+        <span class="param-unit"></span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Wire Diameter</span>
+        <input type="number" id="p-wireDiameter" value="1.2" min="0.05" max="10" step="0.05">
+        <span class="param-unit">mm</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Conductor Dia.</span>
+        <input type="number" id="p-condDiameter" value="1.1" min="0.05" max="10" step="0.05">
+        <span class="param-unit">mm</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Inter-Layer Gap</span>
+        <input type="number" id="p-interLayerGap" value="0.1" min="0" max="2" step="0.01">
+        <span class="param-unit">mm</span>
+      </div>
+
+      <div class="section-header">Wire Config</div>
+
+      <div class="param-row">
+        <span class="param-label">Wire Type</span>
+        <select id="p-wireType" style="grid-column:2/4">
+          <option value="Solid">Solid Wire</option>
+          <option value="Litz">Litz Wire</option>
+        </select>
+      </div>
+      <div id="litz-params">
+        <div class="param-row">
+          <span class="param-label">Litz Strands</span>
+          <input type="number" id="p-litzStrands" value="125" min="7" max="1000" step="10">
+          <span class="param-unit"></span>
+        </div>
+        <div class="param-row">
+          <span class="param-label">Strand Diam.</span>
+          <input type="number" id="p-strandDiam" value="80" min="10" max="500" step="5">
+          <span class="param-unit">μm</span>
+        </div>
+      </div>
+
+      <div class="section-header">Electrical</div>
+
+      <div class="param-row">
+        <span class="param-label">Peak Current</span>
+        <input type="number" id="p-current" value="1.0" min="0.01" max="100" step="0.1">
+        <span class="param-unit">A</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Frequency</span>
+        <input type="number" id="p-frequency" value="3" min="0.001" max="10000" step="0.1">
+        <span class="param-unit">kHz</span>
+      </div>
+
+      <div class="section-header">Gradiometric</div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Enable Gradiometer</span>
+        <label class="toggle"><input type="checkbox" id="p-gradEnabled"><span class="toggle-slider"></span></label>
+      </div>
+      <div id="grad-params">
+        <div class="param-row">
+          <span class="param-label">Coil Gap</span>
+          <input type="number" id="p-coilSpacing" value="20" min="1" max="500" step="1">
+          <span class="param-unit">mm</span>
+        </div>
+        <div class="param-row">
+          <span class="param-label">Polarity</span>
+          <select id="p-polarity" style="grid-column:2/4">
+            <option value="Opposing">Opposing (Gradient)</option>
+            <option value="Same">Same (Additive)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-header">Thermal</div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Enable Thermal Model</span>
+        <label class="toggle"><input type="checkbox" id="p-thermalEnabled"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Ambient Temp</span>
+        <input type="number" id="p-ambientTemp" value="25" min="0" max="80" step="1">
+        <span class="param-unit">°C</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Thermal R_th</span>
+        <input type="number" id="p-thermalResist" value="15" min="0.5" max="100" step="0.5">
+        <span class="param-unit">K/W</span>
+      </div>
+
+      <div class="section-header">Sweep Range</div>
+
+      <div class="param-row">
+        <span class="param-label">Start Freq</span>
+        <input type="number" id="p-sweepStart" value="1" min="0.001" max="100000" step="0.1">
+        <span class="param-unit">kHz</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">End Freq</span>
+        <input type="number" id="p-sweepEnd" value="10000" min="0.001" max="100000" step="100">
+        <span class="param-unit">kHz</span>
+      </div>
+
+      <div class="section-header">Monte Carlo</div>
+
+      <div class="param-row">
+        <span class="param-label">Trials</span>
+        <input type="number" id="p-mcTrials" value="300" min="50" max="2000" step="50">
+        <span class="param-unit"></span>
+      </div>
+      <div class="param-row">
+        <span class="param-label">Tolerance</span>
+        <input type="number" id="p-mcTol" value="1" min="0.1" max="10" step="0.1">
+        <span class="param-unit">%</span>
+      </div>
+
+      <div class="spacer8"></div>
+    </div>
+
+    <div id="left-buttons">
+      <button class="btn btn-primary" onclick="updateAll()">↻ RECALCULATE</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">⬇ EXPORT CSV</button>
+      <button class="btn btn-secondary" onclick="exportSPICE()">⬇ EXPORT SPICE</button>
+      <button class="btn btn-warning" onclick="runMonteCarlo()">⚡ MONTE CARLO</button>
+      <button class="btn btn-danger" onclick="resetDefaults()">↺ RESET DEFAULTS</button>
+    </div>
+  </div>
+
+  <!-- CENTER PANEL -->
+  <div id="center-panel">
+    <div id="viewport-3d">
+      <canvas id="three-canvas"></canvas>
+      <div class="viewport-label">3D COIL GEOMETRY</div>
+      <div class="viewport-hint">Drag to rotate • Scroll to zoom</div>
+    </div>
+    <div id="bottom-area">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('axial')">Axial B-Field</button>
+        <button class="tab-btn" onclick="switchTab('impedance')">Impedance Sweep</button>
+        <button class="tab-btn" onclick="switchTab('resistance')">R vs Frequency</button>
+      </div>
+      <div class="tab-content active" id="tab-axial" style="flex-direction:column">
+        <canvas id="chart-axial" height="200"></canvas>
+      </div>
+      <div class="tab-content" id="tab-impedance" style="flex-direction:column">
+        <canvas id="chart-impedance" height="200"></canvas>
+      </div>
+      <div class="tab-content" id="tab-resistance" style="flex-direction:column">
+        <canvas id="chart-resistance" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+    <div id="analytics-header">
+      <div class="analytics-title">LIVE ANALYTICS</div>
+      <div class="analytics-subtitle" id="analytics-time">Real-time electromagnetic analysis</div>
+    </div>
+    <div id="analytics-scroll">
+
+      <div class="analytics-section">
+        <div class="analytics-section-title">Geometry</div>
+        <div class="metric-row"><span class="metric-name">Inner Radius</span><span class="metric-value white" id="m-innerRadius">---</span></div>
+        <div class="metric-row"><span class="metric-name">Outer Radius</span><span class="metric-value white" id="m-outerRadius">---</span></div>
+        <div class="metric-row"><span class="metric-name">Coil Length</span><span class="metric-value white" id="m-coilLength">---</span></div>
+        <div class="metric-row"><span class="metric-name">Total Turns</span><span class="metric-value white" id="m-totalTurns">---</span></div>
+        <div class="metric-row"><span class="metric-name">Wire Length</span><span class="metric-value white" id="m-wireLength">---</span></div>
+        <div class="metric-row"><span class="metric-name">Fill Factor</span><span class="metric-value" id="m-fillFactor">---</span></div>
+        <div class="metric-row"><span class="metric-name">Gradiometer</span><span class="metric-value" id="m-gradMode">---</span></div>
+      </div>
+
+      <div class="analytics-section">
+        <div class="analytics-section-title">Electromagnetic</div>
+        <div class="metric-row"><span class="metric-name">Inductance (sys)</span><span class="metric-value" id="m-inductance">---</span></div>
+        <div class="metric-row"><span class="metric-name">Mutual Ind.</span><span class="metric-value white" id="m-mutualL">---</span></div>
+        <div class="metric-row"><span class="metric-name">Self-Cap (sys)</span><span class="metric-value white" id="m-selfCap">---</span></div>
+        <div class="metric-row"><span class="metric-name">SRF</span><span class="metric-value white" id="m-srf">---</span></div>
+        <div class="metric-row"><span class="metric-name">Freq / SRF</span><span class="metric-value" id="m-freqSrfRatio">---</span></div>
+        <div class="metric-row"><span class="metric-name">Energy Stored</span><span class="metric-value white" id="m-energy">---</span></div>
+        <div class="metric-row"><span class="metric-name">|Z|</span><span class="metric-value white" id="m-zmag">---</span></div>
+        <div class="metric-row"><span class="metric-name">Z Phase</span><span class="metric-value" id="m-zphase">---</span></div>
+      </div>
+
+      <div class="analytics-section">
+        <div class="analytics-section-title">Resistance & Thermal</div>
+        <div class="metric-row"><span class="metric-name">R_DC</span><span class="metric-value white" id="m-rdc">---</span></div>
+        <div class="metric-row"><span class="metric-name">R_AC</span><span class="metric-value white" id="m-rac">---</span></div>
+        <div class="metric-row"><span class="metric-name">R_AC / R_DC</span><span class="metric-value" id="m-racrdc">---</span></div>
+        <div class="metric-row"><span class="metric-name">Skin Depth</span><span class="metric-value white" id="m-skinDepth">---</span></div>
+        <div class="metric-row"><span class="metric-name">Proximity Factor</span><span class="metric-value" id="m-proxFactor">---</span></div>
+        <div class="metric-row"><span class="metric-name">Coil Temp</span><span class="metric-value" id="m-coilTemp">---</span></div>
+        <div class="metric-row"><span class="metric-name">ρ(T)</span><span class="metric-value white" id="m-thermalRho">---</span></div>
+        <div class="metric-row"><span class="metric-name">P_dissipated</span><span class="metric-value white" id="m-powerDiss">---</span></div>
+      </div>
+
+      <div class="analytics-section">
+        <div class="analytics-section-title">Performance</div>
+        <div class="metric-row"><span class="metric-name">Q Factor</span><span class="metric-value" id="m-qFactor">---</span></div>
+        <div class="metric-row"><span class="metric-name">Peak B (center)</span><span class="metric-value" id="m-bCenter">---</span></div>
+        <div class="metric-row"><span class="metric-name">Peak B (surface)</span><span class="metric-value white" id="m-bSurface">---</span></div>
+        <div class="metric-row"><span class="metric-name">Grad. Balance</span><span class="metric-value" id="m-gradBalance">---</span></div>
+      </div>
+
+      <div class="analytics-section">
+        <div class="analytics-section-title">Status</div>
+        <div id="warnings-box"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SPICE MODAL -->
+<div class="modal-overlay hidden" id="spice-modal">
+  <div class="modal">
+    <h2>SPICE NETLIST EXPORT</h2>
+    <textarea id="spice-text" readonly></textarea>
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="downloadSpice()">⬇ DOWNLOAD .CIR</button>
+      <button class="btn btn-secondary" onclick="closeModal('spice-modal')">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- MC MODAL -->
+<div class="modal-overlay hidden" id="mc-modal">
+  <div class="modal" style="min-width:680px;max-width:700px">
+    <h2>MONTE CARLO RESULTS</h2>
+    <div class="mc-charts" id="mc-charts"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="btn btn-secondary" onclick="closeModal('mc-modal')">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS OVERLAY -->
+<div id="progress-overlay" class="hidden">
+  <div class="progress-box">
+    <h3>MONTE CARLO ANALYSIS</h3>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-pct" id="progress-pct">0%</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// MATH UTILITIES
+// ============================================================
+
+// Complete elliptic integrals K(m) and E(m) via AGM
+function ellipke(m) {
+  // Clamp
+  if (m < 0) m = 0;
+  if (m > 0.9999999999) m = 0.9999999999;
+  const k = Math.sqrt(m);
+  let a = 1.0, b = Math.sqrt(1 - m), c = k;
+  let Kval = 1.0;
+  let prev_a;
+  for (let i = 0; i < 50; i++) {
+    prev_a = a;
+    a = (a + b) / 2;
+    b = Math.sqrt(prev_a * b);
+    c = (prev_a - a);
+    if (Math.abs(c) < 1e-14 * a) break;
+  }
+  Kval = Math.PI / (2 * a);
+
+  // E via descending Landen
+  let a0 = 1.0, b0 = Math.sqrt(1 - m);
+  let sum = 1.0 - m / 2;
+  let pow2 = 1.0;
+  for (let i = 0; i < 50; i++) {
+    let a1 = (a0 + b0) / 2;
+    let b1 = Math.sqrt(a0 * b0);
+    pow2 *= 2;
+    sum -= pow2 * (a1 - b0) * (a1 - b0) / 2;
+    a0 = a1; b0 = b1;
+    if (Math.abs(a0 - b0) < 1e-14 * a0) break;
+  }
+  let Eval = sum * Math.PI / (2 * a0);
+  return { K: Kval, E: Eval };
+}
+
+function ellipkeVec(mArr) {
+  return mArr.map(m => ellipke(m));
+}
+
+// sinh, cosh, sin, cos helpers that avoid overflow
+function safeSinh(x) { if (x > 100) return Infinity; if (x < -100) return -Infinity; return Math.sinh(x); }
+function safeCosh(x) { if (Math.abs(x) > 100) return Infinity; return Math.cosh(x); }
+
+// ============================================================
+// APPLICATION STATE
+// ============================================================
+
+const state = {
+  innerRadius: 0.022,
+  length: 0.100,
+  numTurns: 82,
+  numLayers: 2,
+  wireDiameter: 0.00120,
+  condDiameter: 0.00110,
+  interLayerGap: 0.0001,
+  wireType: 'Solid',
+  litzStrands: 125,
+  strandDiam: 80e-6,
+  currentPeak: 1.0,
+  frequency: 3000,
+  gradEnabled: false,
+  coilSpacing: 0.020,
+  polarity: 'Opposing',
+  thermalEnabled: false,
+  ambientTemp: 25,
+  thermalResist: 15,
+  sweepStart: 1000,
+  sweepEnd: 10000000,
+  mcTrials: 300,
+  mcTol: 0.01,
+  // physics
+  mu0: 4 * Math.PI * 1e-7,
+  rho: 1.68e-8,
+  rho_ref: 1.68e-8,
+  T_ref: 20,
+  alpha_cu: 0.00393,
+};
+
+let lastAnalytics = null;
+let sweepCacheL = 0, sweepCacheC = 0, sweepCacheRdc = 0;
+let mcCharts = [];
+
+// ============================================================
+// READ UI INTO STATE
+// ============================================================
+
+function readUI() {
+  const g = (id) => parseFloat(document.getElementById(id).value) || 0;
+  const gi = (id) => parseInt(document.getElementById(id).value) || 1;
+  state.innerRadius    = g('p-innerRadius') / 1000;
+  state.length         = g('p-length') / 1000;
+  state.numTurns       = gi('p-numTurns');
+  state.numLayers      = gi('p-numLayers');
+  state.wireDiameter   = g('p-wireDiameter') / 1000;
+  state.condDiameter   = g('p-condDiameter') / 1000;
+  state.interLayerGap  = g('p-interLayerGap') / 1000;
+  state.wireType       = document.getElementById('p-wireType').value;
+  state.litzStrands    = gi('p-litzStrands');
+  state.strandDiam     = g('p-strandDiam') * 1e-6;
+  state.currentPeak    = g('p-current');
+  state.frequency      = g('p-frequency') * 1000;
+  state.gradEnabled    = document.getElementById('p-gradEnabled').checked;
+  state.coilSpacing    = g('p-coilSpacing') / 1000;
+  state.polarity       = document.getElementById('p-polarity').value;
+  state.thermalEnabled = document.getElementById('p-thermalEnabled').checked;
+  state.ambientTemp    = g('p-ambientTemp');
+  state.thermalResist  = g('p-thermalResist');
+  state.sweepStart     = g('p-sweepStart') * 1000;
+  state.sweepEnd       = g('p-sweepEnd') * 1000;
+  state.mcTrials       = gi('p-mcTrials');
+  state.mcTol          = g('p-mcTol') / 100;
+}
+
+// ============================================================
+// WIRE LENGTH
+// ============================================================
+
+function computeWireLength() {
+  const layerSpacing = state.wireDiameter + state.interLayerGap;
+  let totalLen = 0;
+  const numCoils = state.gradEnabled ? 2 : 1;
+  for (let ci = 0; ci < numCoils; ci++) {
+    for (let layer = 0; layer < state.numLayers; layer++) {
+      const R = state.innerRadius + layer * layerSpacing;
+      const pitch = state.length / state.numTurns;
+      const turnLen = Math.sqrt((2 * Math.PI * R) ** 2 + pitch ** 2);
+      totalLen += turnLen * state.numTurns;
+    }
+  }
+  return totalLen;
+}
+
+// ============================================================
+// DOWELL AC RESISTANCE VECTOR
+// ============================================================
+
+function computeRacVector(fVec, R_DC) {
+  const mu0 = state.mu0;
+  const d_eff = state.wireType === 'Litz' ? state.strandDiam : state.condDiameter;
+
+  return fVec.map(f => {
+    const omega = 2 * Math.PI * f;
+    const delta = Math.sqrt(2 * state.rho / (omega * mu0 + 1e-30));
+    const Delta = (d_eff / (delta + 1e-30)) * Math.sqrt(Math.PI / 4);
+
+    const sh2 = safeSinh(2 * Delta), si2 = Math.sin(2 * Delta);
+    const ch2 = safeCosh(2 * Delta), co2 = Math.cos(2 * Delta);
+    const sh1 = safeSinh(Delta), si1 = Math.sin(Delta);
+    const ch1 = safeCosh(Delta), co1 = Math.cos(Delta);
+
+    let G1 = 1, G2 = 0;
+    if (isFinite(sh2) && isFinite(ch2)) {
+      const denom1 = ch2 - co2 + 1e-30;
+      G1 = Delta * (sh2 + si2) / denom1;
+    }
+    if (isFinite(sh1) && isFinite(ch1)) {
+      const denom2 = ch1 + co1 + 1e-30;
+      G2 = Delta * (sh1 - si1) / denom2;
+    }
+    if (f < 1e-6) { G1 = 1; G2 = 0; }
+
+    const p = state.numLayers;
+    let F_R = G1 + (2 * (p * p - 1) / 3) * G2;
+    let Rac = R_DC * F_R;
+
+    if (state.wireType === 'Litz') {
+      const F_litz = 1 + 0.25 * state.litzStrands * (state.strandDiam / (delta + 1e-30)) ** 2;
+      Rac *= F_litz;
+    }
+    return Math.max(Rac, R_DC);
+  });
+}
+
+// ============================================================
+// SINGLE-COIL INDUCTANCE (Neumann)
+// ============================================================
+
+function computeSingleCoilInductance() {
+  const mu0 = state.mu0;
+  const r0 = state.innerRadius;
+  const u = state.numTurns;
+  const v = state.numLayers;
+  const coilLen = state.length;
+  const wireDiam = state.wireDiameter;
+  const ky = state.wireDiameter + state.interLayerGap;
+  const kx = coilLen / Math.max(u, 1);
+
+  let M_total = 0;
+  let nxMin = 1;
+
+  for (let ny = 0; ny < v; ny++) {
+    for (let nx = nxMin; nx < u; nx++) {
+      const MF = (ny === 0 || nx === 0) ? 2 : 4;
+      const x = nx * kx;
+      const mult = MF * (u - nx);
+      for (let iy = 0; iy <= v - ny - 1; iy++) {
+        const r1 = r0 + iy * ky;
+        const r2 = r0 + (iy + ny) * ky;
+        let m_val = (4 * r1 * r2) / ((r1 + r2) ** 2 + x ** 2);
+        m_val = Math.max(0, Math.min(m_val, 0.9999999999));
+        const { K, E } = ellipke(m_val);
+        const k = Math.sqrt(m_val);
+        const M_pair = mu0 * Math.sqrt(r1 * r2) * ((2 / k - k) * K - (2 / k) * E);
+        M_total += mult * M_pair;
+      }
+    }
+    nxMin = 0;
+  }
+
+  const g = Math.exp(-0.25) * wireDiam / 2;
+  for (let iy = 0; iy < v; iy++) {
+    const r1 = r0 + iy * ky;
+    let m_self = (4 * r1 * r1) / ((2 * r1) ** 2 + g ** 2);
+    m_self = Math.max(0, Math.min(m_self, 0.9999999999));
+    const { K, E } = ellipke(m_self);
+    const k = Math.sqrt(m_self);
+    const L_self = mu0 * r1 * ((2 / k - k) * K - (2 / k) * E);
+    M_total += u * L_self;
+  }
+
+  return Math.max(M_total, 1e-15);
+}
+
+// ============================================================
+// MUTUAL INDUCTANCE BETWEEN COILS
+// ============================================================
+
+function computeMutualInductance() {
+  const mu0 = state.mu0;
+  const r0 = state.innerRadius;
+  const u = state.numTurns;
+  const v = state.numLayers;
+  const coilLen = state.length;
+  const ky = state.wireDiameter + state.interLayerGap;
+  const kx = coilLen / Math.max(u, 1);
+  const spacing = state.coilSpacing + coilLen;
+
+  const z1_arr = [], z2_arr = [];
+  for (let i = 0; i < u; i++) {
+    z1_arr.push(-coilLen / 2 + kx / 2 + i * kx - spacing / 2);
+    z2_arr.push(-coilLen / 2 + kx / 2 + i * kx + spacing / 2);
+  }
+
+  let M = 0;
+  for (let ly1 = 0; ly1 < v; ly1++) {
+    const r1 = r0 + ly1 * ky;
+    for (let i = 0; i < u; i++) {
+      for (let j = 0; j < u; j++) {
+        const x_ij = Math.abs(z1_arr[i] - z2_arr[j]);
+        for (let ly2 = 0; ly2 < v; ly2++) {
+          const r2 = r0 + ly2 * ky;
+          const factor = ly1 === ly2 ? 1 : 2;
+          if (ly2 < ly1) continue;
+          let m_val = (4 * r1 * r2) / ((r1 + r2) ** 2 + x_ij ** 2);
+          m_val = Math.max(0, Math.min(m_val, 0.9999999999));
+          const { K, E } = ellipke(m_val);
+          const k = Math.sqrt(m_val);
+          const M_pair = mu0 * Math.sqrt(r1 * r2) * ((2 / k - k) * K - (2 / k) * E);
+          M += factor * M_pair;
+        }
+      }
+    }
+  }
+  return Math.max(M, 0);
+}
+
+// ============================================================
+// SELF CAPACITANCE
+// ============================================================
+
+function computeSelfCapacitance(R_mean) {
+  const eps0 = 8.854e-12;
+  const eps_r = 3.2;
+  const D_m = 2 * R_mean;
+  const D_cm = D_m * 100;
+  const ratio = Math.max(Math.min(state.length / D_m, 10), 0.1);
+
+  const rt = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+  const Ht = [0.96, 0.79, 0.70, 0.64, 0.60, 0.54, 0.48, 0.46, 0.46, 0.50, 0.61, 0.72, 0.81, 0.92, 1.01, 1.12, 1.22, 1.32];
+  let H = 0.46;
+  for (let i = 0; i < rt.length - 1; i++) {
+    if (ratio >= rt[i] && ratio <= rt[i + 1]) {
+      H = Ht[i] + (Ht[i+1] - Ht[i]) * (ratio - rt[i]) / (rt[i+1] - rt[i]);
+      break;
+    }
+  }
+  const ky = state.wireDiameter + state.interLayerGap;
+
+  let C_layer;
+  if (state.numLayers > 1) {
+    const A_cyl = 2 * Math.PI * R_mean * state.length;
+    const ins_thick = state.wireDiameter - state.condDiameter;
+    const gap_eff = Math.max(ins_thick + state.interLayerGap, 1e-6);
+    const C_static = (eps0 * eps_r * A_cyl) / gap_eff;
+    C_layer = C_static * (4 * (state.numLayers - 1)) / (3 * state.numLayers ** 2);
+  } else {
+    const N = state.numTurns;
+    const p_turn = Math.max(state.length / N, state.wireDiameter);
+    const dc = Math.max(state.condDiameter, 1e-6);
+    const ratio2 = Math.max(p_turn / dc, 1.001);
+    const C_t2t = (eps0 * eps_r * Math.PI * dc) / Math.log(ratio2);
+    C_layer = (C_t2t * (N - 1)) / 3;
+  }
+
+  let C_single = C_layer + 1e-15;
+
+  if (state.gradEnabled) {
+    const ky = state.wireDiameter + state.interLayerGap;
+    const R_outer = state.innerRadius + (state.numLayers - 1) * ky;
+    const A_face = Math.PI * (R_outer ** 2 - state.innerRadius ** 2);
+    const d_gap = Math.max(state.coilSpacing, 1e-4);
+    const C_mutual = eps0 * A_face / d_gap;
+    return C_single / 2 + C_mutual;
+  }
+  return C_single;
+}
+
+// ============================================================
+// FULL ANALYTICS
+// ============================================================
+
+function calculateAnalytics() {
+  const mu0 = state.mu0;
+  const ky = state.wireDiameter + state.interLayerGap;
+  const N_total = state.numTurns * state.numLayers;
+  const R_mean = state.innerRadius + (state.numLayers - 1) * ky / 2;
+
+  // Wire length & DC resistance
+  const wireLen = computeWireLength();
+  const area = state.wireType === 'Litz'
+    ? state.litzStrands * Math.PI * (state.strandDiam / 2) ** 2
+    : Math.PI * (state.condDiameter / 2) ** 2;
+  const R_DC = (state.rho * wireLen) / Math.max(area, 1e-20);
+
+  // Inductance
+  const L_single = computeSingleCoilInductance();
+  let L_sys, mutualL = 0;
+  if (state.gradEnabled) {
+    mutualL = computeMutualInductance();
+    L_sys = state.polarity === 'Same'
+      ? 2 * L_single + 2 * mutualL
+      : 2 * L_single - 2 * mutualL;
+    L_sys = Math.max(L_sys, 1e-15);
+  } else {
+    L_sys = L_single;
+  }
+
+  // Self-capacitance
+  const C = computeSelfCapacitance(R_mean);
+
+  // SRF
+  const SRF = (L_sys > 0 && C > 0) ? 1 / (2 * Math.PI * Math.sqrt(L_sys * C)) : Infinity;
+  const freqSrfPct = isFinite(SRF) && SRF > 0 ? (state.frequency / SRF) * 100 : 0;
+
+  // AC resistance (Dowell)
+  const omega_op = 2 * Math.PI * state.frequency;
+  const skinDepth = Math.sqrt(2 * state.rho / (omega_op * mu0 + 1e-20));
+  const d_eff = state.wireType === 'Litz' ? state.strandDiam : state.condDiameter;
+  const Delta_op = (d_eff / (skinDepth + 1e-20)) * Math.sqrt(Math.PI / 4);
+
+  const sh2 = safeSinh(2 * Delta_op), si2 = Math.sin(2 * Delta_op);
+  const ch2 = safeCosh(2 * Delta_op), co2 = Math.cos(2 * Delta_op);
+  const sh1 = safeSinh(Delta_op), si1 = Math.sin(Delta_op);
+  const ch1 = safeCosh(Delta_op), co1 = Math.cos(Delta_op);
+
+  let G1_op = 1, G2_op = 0;
+  if (isFinite(sh2)) G1_op = Delta_op * (sh2 + si2) / (ch2 - co2 + 1e-30);
+  if (isFinite(sh1)) G2_op = Delta_op * (sh1 - si1) / (ch1 + co1 + 1e-30);
+
+  const p = state.numLayers;
+  const F_R_op = G1_op + (2 * (p * p - 1) / 3) * G2_op;
+  let R_AC = R_DC * F_R_op;
+
+  if (state.wireType === 'Litz') {
+    const F_litz = 1 + 0.25 * state.litzStrands * (state.strandDiam / (skinDepth + 1e-30)) ** 2;
+    R_AC *= F_litz;
+  }
+  R_AC = Math.max(R_AC, R_DC);
+
+  const proxFactor = F_R_op / Math.max(G1_op, 1e-10);
+
+  // Impedance
+  const denom_real = 1 - omega_op ** 2 * L_sys * C;
+  const denom_imag = omega_op * R_AC * C;
+  const Z_num_re = R_AC, Z_num_im = omega_op * L_sys;
+  const Z_den_re = denom_real, Z_den_im = denom_imag;
+  const Z_den_mag2 = Z_den_re ** 2 + Z_den_im ** 2;
+  let Z_re, Z_im;
+  if (Z_den_mag2 < 1e-30) {
+    Z_re = Z_num_re; Z_im = Z_num_im;
+  } else {
+    Z_re = (Z_num_re * Z_den_re + Z_num_im * Z_den_im) / Z_den_mag2;
+    Z_im = (Z_num_im * Z_den_re - Z_num_re * Z_den_im) / Z_den_mag2;
+  }
+  const Z_mag = Math.sqrt(Z_re ** 2 + Z_im ** 2);
+  const Z_phase = Math.atan2(Z_im, Z_re) * 180 / Math.PI;
+
+  // Q
+  const Q = R_AC > 1e-10 ? (omega_op * L_sys) / R_AC : Infinity;
+
+  // Fill factor
+  const singleCondArea = state.wireType === 'Litz'
+    ? state.litzStrands * Math.PI * (state.strandDiam / 2) ** 2
+    : Math.PI * (state.condDiameter / 2) ** 2;
+  const radialBuild = Math.max((state.numLayers - 1) * ky + state.wireDiameter, state.wireDiameter);
+  const windowArea = state.length * radialBuild;
+  const fillFactor = windowArea > 1e-20 ? Math.min(N_total * singleCondArea / windowArea, 1.0) : 0;
+
+  // Energy
+  const energyStored = 0.5 * L_sys * state.currentPeak ** 2;
+
+  // Peak B
+  const n = state.numTurns / state.length;
+  let B_center = 0;
+  for (let layer = 0; layer < state.numLayers; layer++) {
+    const R = state.innerRadius + layer * ky;
+    const z1 = state.length / 2, z2 = -state.length / 2;
+    const d1 = Math.sqrt(z1 ** 2 + R ** 2), d2 = Math.sqrt(z2 ** 2 + R ** 2);
+    if (d1 > 1e-12 && d2 > 1e-12) {
+      B_center += (mu0 * n * state.currentPeak / 2) * (z1 / d1 - z2 / d2);
+    }
+  }
+  B_center = Math.abs(B_center);
+  const B_surface = (state.innerRadius > 1e-6 && R_mean > 1e-6)
+    ? Math.min(B_center * (R_mean / state.innerRadius), B_center * 3)
+    : B_center;
+
+  // Outer radius
+  const outerRadius = state.innerRadius + (state.numLayers - 1) * ky + state.wireDiameter;
+
+  // Coupling / grad balance
+  const couplingCoeff = state.gradEnabled && L_single > 1e-15 ? mutualL / L_single : 0;
+  const gradBalance = state.gradEnabled ? `k=${couplingCoeff.toFixed(4)}` : 'N/A';
+
+  // Cache for sweep
+  sweepCacheL = L_sys;
+  sweepCacheC = C;
+  sweepCacheRdc = R_DC;
+
+  // Warnings
+  const warnings = [];
+  if (L_sys < 1e-9 || L_sys > 10e-3) warnings.push('Inductance out of typical range');
+  if (C < 1e-12 || C > 10e-9) warnings.push('Capacitance out of typical range');
+  if (isFinite(SRF) && SRF < state.frequency * 2) warnings.push('SRF too close to operating freq');
+  if (G1_op > 10) warnings.push('High skin-effect ratio (G1 > 10)');
+  if (proxFactor > 5) warnings.push('Severe proximity effect losses');
+  if (fillFactor < 0.25) warnings.push('Low fill factor (<25%)');
+
+  return {
+    wireLen, R_DC, R_AC, L_sys, mutualL, C, SRF, freqSrfPct,
+    skinDepth, G1_op, proxFactor, F_R_op,
+    Z_mag, Z_phase, Q, fillFactor, energyStored,
+    B_center, B_surface, outerRadius, N_total, R_mean,
+    couplingCoeff, gradBalance, warnings,
+    racrdc: R_AC / Math.max(R_DC, 1e-20)
+  };
+}
+
+// ============================================================
+// THERMAL LOOP
+// ============================================================
+
+function computeWithThermal() {
+  state.rho = state.rho_ref;
+  let a = calculateAnalytics();
+  let T_coil = state.ambientTemp, P_diss = 0;
+
+  if (state.thermalEnabled) {
+    const I_rms = state.currentPeak / Math.sqrt(2);
+    for (let iter = 0; iter < 10; iter++) {
+      P_diss = I_rms ** 2 * a.R_AC;
+      T_coil = state.ambientTemp + P_diss * state.thermalResist;
+      const rho_new = state.rho_ref * (1 + state.alpha_cu * (T_coil - state.T_ref));
+      const relErr = Math.abs(rho_new - state.rho) / state.rho;
+      state.rho = rho_new;
+      a = calculateAnalytics();
+      if (relErr < 1e-4) break;
+    }
+  } else {
+    P_diss = (state.currentPeak / Math.sqrt(2)) ** 2 * a.R_AC;
+    T_coil = state.ambientTemp;
+    state.rho = state.rho_ref;
+  }
+
+  a.coilTemp = T_coil;
+  a.powerDissipated = P_diss;
+  if (state.thermalEnabled && T_coil > 100) a.warnings.push('Coil temperature exceeds 100°C!');
+  return a;
+}
+
+// ============================================================
+// B-FIELD PROFILE
+// ============================================================
+
+function calculateBFieldProfile() {
+  const mu0 = state.mu0;
+  const ky = state.wireDiameter + state.interLayerGap;
+  const L = state.length;
+  const n = state.numTurns / L;
+
+  const zRange = state.gradEnabled
+    ? (state.coilSpacing / 2 + L) * 2.5
+    : L * 2.5;
+
+  const N = 401;
+  const zPos = [], Bz = [];
+  for (let i = 0; i < N; i++) {
+    zPos.push(-zRange / 2 + (i / (N - 1)) * zRange);
+    Bz.push(0);
+  }
+
+  const coilCenters = state.gradEnabled ? [-(state.coilSpacing + L) / 2, (state.coilSpacing + L) / 2] : [0];
+  const coilMult = state.gradEnabled ? (state.polarity === 'Opposing' ? [1, -1] : [1, 1]) : [1];
+
+  for (let ci = 0; ci < coilCenters.length; ci++) {
+    const cz = coilCenters[ci];
+    const Imult = coilMult[ci];
+    for (let layer = 0; layer < state.numLayers; layer++) {
+      const R = state.innerRadius + layer * ky;
+      for (let i = 0; i < N; i++) {
+        const z = zPos[i] - cz;
+        const z1 = z + L / 2, z2 = z - L / 2;
+        const d1 = Math.sqrt(z1 ** 2 + R ** 2), d2 = Math.sqrt(z2 ** 2 + R ** 2);
+        if (d1 > 1e-12 && d2 > 1e-12) {
+          Bz[i] += Imult * (mu0 * n * state.currentPeak / 2) * (z1 / d1 - z2 / d2);
+        }
+      }
+    }
+  }
+
+  if (!state.gradEnabled) {
+    for (let i = 0; i < Bz.length; i++) Bz[i] = Math.abs(Bz[i]);
+  }
+  return { zPos, Bz };
+}
+
+// ============================================================
+// CHART INSTANCES
+// ============================================================
+
+let chartAxial = null, chartImpedance = null, chartResistance = null;
+
+function getChartOptions(xLabel, yLabel, logX = false, logY = false) {
+  return {
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: '#8a8fa8', font: { family: 'Share Tech Mono', size: 10 }, boxWidth: 20 }
+      },
+      tooltip: {
+        backgroundColor: '#181924',
+        borderColor: '#252840',
+        borderWidth: 1,
+        titleColor: '#e8eaf0',
+        bodyColor: '#8a8fa8',
+        titleFont: { family: 'Share Tech Mono', size: 10 },
+        bodyFont: { family: 'Share Tech Mono', size: 10 },
+      }
+    },
+    scales: {
+      x: {
+        type: logX ? 'logarithmic' : 'linear',
+        grid: { color: '#1a1d2e' },
+        ticks: {
+          color: '#505568',
+          font: { family: 'Share Tech Mono', size: 9 },
+          maxTicksLimit: 8,
+          callback: function(v) {
+            if (logX) return v >= 1e6 ? (v/1e6).toFixed(0)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'k' : v;
+            return v.toFixed(0);
+          }
+        },
+        title: { display: true, text: xLabel, color: '#505568', font: { family: 'Rajdhani', size: 10 } }
+      },
+      y: {
+        type: logY ? 'logarithmic' : 'linear',
+        grid: { color: '#1a1d2e' },
+        ticks: {
+          color: '#505568',
+          font: { family: 'Share Tech Mono', size: 9 },
+          maxTicksLimit: 6,
+          callback: function(v) {
+            if (logY) return v >= 1e3 ? (v/1e3).toFixed(0)+'k' : v >= 1 ? v.toFixed(2) : v.toExponential(1);
+            return v;
+          }
+        },
+        title: { display: true, text: yLabel, color: '#505568', font: { family: 'Rajdhani', size: 10 } }
+      }
+    }
+  };
+}
+
+function renderAxialChart(analytics) {
+  const { zPos, Bz } = calculateBFieldProfile();
+  const labels = zPos.map(z => (z * 1000).toFixed(1));
+  const data = Bz.map(b => b * 1000);
+
+  if (!chartAxial) {
+    const ctx = document.getElementById('chart-axial').getContext('2d');
+    chartAxial = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{
+        label: 'Bz (mT)',
+        data,
+        borderColor: '#1a8fd1',
+        backgroundColor: 'rgba(26,143,209,0.08)',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.3,
+      }] },
+      options: getChartOptions('Z Position (mm)', 'Bz (mT)')
+    });
+  } else {
+    chartAxial.data.labels = labels;
+    chartAxial.data.datasets[0].data = data;
+    chartAxial.options.scales.x.title.text = state.gradEnabled ? 'Z Position (mm) [gradiometric]' : 'Z Position (mm)';
+    chartAxial.update('none');
+  }
+}
+
+function renderImpedanceSweep() {
+  if (sweepCacheL < 1e-20 || sweepCacheC < 1e-30) return;
+  const fStart = Math.max(state.sweepStart, 1);
+  const fEnd = state.sweepEnd;
+  if (fEnd <= fStart) return;
+
+  const nPts = 300;
+  const f_vec = [];
+  for (let i = 0; i < nPts; i++) {
+    f_vec.push(Math.pow(10, Math.log10(fStart) + (i / (nPts - 1)) * Math.log10(fEnd / fStart)));
+  }
+
+  const Rac_vec = computeRacVector(f_vec, sweepCacheRdc);
+  const Z_vec = f_vec.map((f, fi) => {
+    const om = 2 * Math.PI * f;
+    const R = Rac_vec[fi];
+    const num_re = R, num_im = om * sweepCacheL;
+    const den_re = 1 - om ** 2 * sweepCacheL * sweepCacheC;
+    const den_im = om * R * sweepCacheC;
+    const den_mag2 = den_re ** 2 + den_im ** 2;
+    if (den_mag2 < 1e-30) return Math.sqrt(num_re ** 2 + num_im ** 2);
+    const z_re = (num_re * den_re + num_im * den_im) / den_mag2;
+    const z_im = (num_im * den_re - num_re * den_im) / den_mag2;
+    return Math.sqrt(z_re ** 2 + z_im ** 2);
+  });
+
+  const SRF_hz = 1 / (2 * Math.PI * Math.sqrt(sweepCacheL * sweepCacheC));
+  const peakZ = Math.max(...Z_vec.filter(isFinite));
+
+  const srfData = f_vec.map(f => (f >= fStart && f <= fEnd && Math.abs(f - SRF_hz) < SRF_hz * 0.05) ? null : null);
+
+  if (!chartImpedance) {
+    const ctx = document.getElementById('chart-impedance').getContext('2d');
+    chartImpedance = new Chart(ctx, {
+      type: 'line',
+      data: { labels: f_vec, datasets: [
+        {
+          label: '|Z| (Ω)',
+          data: Z_vec.map((v, i) => ({ x: f_vec[i], y: v })),
+          borderColor: '#1a8fd1',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 0,
+        },
+        {
+          label: `SRF = ${formatFreq(SRF_hz)}`,
+          data: [{ x: SRF_hz, y: Math.min(peakZ * 0.01, 0.1) }, { x: SRF_hz, y: peakZ }],
+          borderColor: '#f0a820',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointRadius: 0,
+        }
+      ]},
+      options: { ...getChartOptions('Frequency (Hz)', '|Z| (Ω)', true, true), parsing: false }
+    });
+  } else {
+    chartImpedance.data.datasets[0].data = Z_vec.map((v, i) => ({ x: f_vec[i], y: v }));
+    chartImpedance.data.datasets[1].data = [{ x: SRF_hz, y: Math.min(peakZ * 0.01, 0.1) }, { x: SRF_hz, y: peakZ }];
+    chartImpedance.data.datasets[1].label = `SRF = ${formatFreq(SRF_hz)}`;
+    chartImpedance.options.scales.x.min = fStart;
+    chartImpedance.options.scales.x.max = fEnd;
+    chartImpedance.update('none');
+  }
+}
+
+function renderResistanceSweep() {
+  if (sweepCacheRdc < 1e-20) return;
+  const fStart = Math.max(state.sweepStart, 1);
+  const fEnd = state.sweepEnd;
+  if (fEnd <= fStart) return;
+
+  const nPts = 300;
+  const f_vec = [];
+  for (let i = 0; i < nPts; i++) {
+    f_vec.push(Math.pow(10, Math.log10(fStart) + (i / (nPts - 1)) * Math.log10(fEnd / fStart)));
+  }
+
+  const Rac_vec = computeRacVector(f_vec, sweepCacheRdc);
+  const d_eff = state.wireType === 'Litz' ? state.strandDiam : state.condDiameter;
+  const Rskin_vec = f_vec.map(f => {
+    const om = 2 * Math.PI * f;
+    const delta = Math.sqrt(2 * state.rho / (om * state.mu0 + 1e-30));
+    const Delta = (d_eff / (delta + 1e-30)) * Math.sqrt(Math.PI / 4);
+    const sh2 = safeSinh(2 * Delta), si2 = Math.sin(2 * Delta);
+    const ch2 = safeCosh(2 * Delta), co2 = Math.cos(2 * Delta);
+    if (!isFinite(sh2)) return sweepCacheRdc;
+    return sweepCacheRdc * Delta * (sh2 + si2) / (ch2 - co2 + 1e-30);
+  });
+
+  if (!chartResistance) {
+    const ctx = document.getElementById('chart-resistance').getContext('2d');
+    chartResistance = new Chart(ctx, {
+      type: 'line',
+      data: { labels: f_vec, datasets: [
+        {
+          label: 'R_DC',
+          data: f_vec.map(f => ({ x: f, y: sweepCacheRdc })),
+          borderColor: '#505568',
+          backgroundColor: 'transparent',
+          borderWidth: 1.2,
+          borderDash: [3, 3],
+          pointRadius: 0,
+        },
+        {
+          label: 'R_skin only',
+          data: Rskin_vec.map((v, i) => ({ x: f_vec[i], y: v })),
+          borderColor: '#4a90c4',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [6, 2],
+          pointRadius: 0,
+        },
+        {
+          label: 'R_AC total',
+          data: Rac_vec.map((v, i) => ({ x: f_vec[i], y: v })),
+          borderColor: '#e04040',
+          backgroundColor: 'rgba(224,64,64,0.06)',
+          borderWidth: 2.2,
+          pointRadius: 0,
+          fill: true,
+        },
+      ]},
+      options: { ...getChartOptions('Frequency (Hz)', 'R_AC (Ω)', true, true), parsing: false }
+    });
+  } else {
+    chartResistance.data.datasets[0].data = f_vec.map(f => ({ x: f, y: sweepCacheRdc }));
+    chartResistance.data.datasets[1].data = Rskin_vec.map((v, i) => ({ x: f_vec[i], y: v }));
+    chartResistance.data.datasets[2].data = Rac_vec.map((v, i) => ({ x: f_vec[i], y: v }));
+    chartResistance.options.scales.x.min = fStart;
+    chartResistance.options.scales.x.max = fEnd;
+    chartResistance.update('none');
+  }
+}
+
+// ============================================================
+// ANALYTICS DISPLAY
+// ============================================================
+
+function fmtR(R) {
+  if (R >= 1) return R.toFixed(4) + ' Ω';
+  if (R >= 1e-3) return (R * 1e3).toFixed(4) + ' mΩ';
+  return (R * 1e6).toFixed(2) + ' μΩ';
+}
+function fmtL(L) {
+  if (L >= 1e-3) return (L * 1e3).toFixed(4) + ' mH';
+  if (L >= 1e-6) return (L * 1e6).toFixed(3) + ' μH';
+  return (L * 1e9).toFixed(2) + ' nH';
+}
+function fmtZ(Z) {
+  if (Z >= 1e6) return (Z / 1e6).toFixed(2) + ' MΩ';
+  if (Z >= 1000) return (Z / 1000).toFixed(2) + ' kΩ';
+  if (Z >= 1) return Z.toFixed(3) + ' Ω';
+  return (Z * 1000).toFixed(2) + ' mΩ';
+}
+function fmtFreq(hz) { return formatFreq(hz); }
+function formatFreq(hz) {
+  if (!isFinite(hz)) return '∞';
+  if (hz >= 1e9) return (hz / 1e9).toFixed(3) + ' GHz';
+  if (hz >= 1e6) return (hz / 1e6).toFixed(3) + ' MHz';
+  if (hz >= 1e3) return (hz / 1e3).toFixed(2) + ' kHz';
+  return hz.toFixed(1) + ' Hz';
+}
+
+function setMetric(id, text, cls = '') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'metric-value' + (cls ? ' ' + cls : '');
+}
+
+function updateAnalyticsDisplay(a) {
+  const ky = state.wireDiameter + state.interLayerGap;
+
+  setMetric('m-innerRadius', (state.innerRadius * 1000).toFixed(2) + ' mm', 'white');
+  setMetric('m-outerRadius', (a.outerRadius * 1000).toFixed(2) + ' mm', 'white');
+  setMetric('m-coilLength', (state.length * 1000).toFixed(2) + ' mm', 'white');
+  setMetric('m-totalTurns', a.N_total.toString(), 'white');
+  setMetric('m-wireLength', a.wireLen.toFixed(2) + ' m', 'white');
+
+  const ff = a.fillFactor * 100;
+  setMetric('m-fillFactor', ff.toFixed(1) + ' %', ff >= 50 ? '' : ff >= 25 ? 'warn' : 'danger');
+  setMetric('m-gradMode',
+    state.gradEnabled ? `${state.polarity} | gap=${(state.coilSpacing * 1000).toFixed(0)}mm` : 'Off (single coil)',
+    state.gradEnabled ? 'warn' : 'muted');
+
+  setMetric('m-inductance', fmtL(a.L_sys));
+  setMetric('m-mutualL', state.gradEnabled ? fmtL(a.mutualL) : 'N/A', state.gradEnabled ? 'white' : 'muted');
+  setMetric('m-selfCap', (a.C * 1e12).toFixed(3) + ' pF', 'white');
+
+  const srfStr = formatFreq(a.SRF);
+  setMetric('m-srf', srfStr, 'white');
+  const fsr = a.freqSrfPct;
+  setMetric('m-freqSrfRatio', fsr.toFixed(1) + ' %', fsr < 30 ? '' : fsr < 70 ? 'warn' : 'danger');
+
+  const E_mJ = a.energyStored * 1000;
+  const E_str = E_mJ >= 1 ? E_mJ.toFixed(3) + ' mJ'
+    : E_mJ >= 1e-3 ? (E_mJ * 1e3).toFixed(3) + ' μJ'
+    : (E_mJ * 1e6).toFixed(2) + ' nJ';
+  setMetric('m-energy', E_str, 'white');
+  setMetric('m-zmag', fmtZ(a.Z_mag), 'white');
+  const zpAbs = Math.abs(a.Z_phase);
+  setMetric('m-zphase', a.Z_phase.toFixed(1) + '°', zpAbs > 80 ? '' : zpAbs >= 45 ? 'warn' : 'danger');
+
+  setMetric('m-rdc', fmtR(a.R_DC), 'white');
+  setMetric('m-rac', fmtR(a.R_AC), 'white');
+  const rr = a.racrdc;
+  setMetric('m-racrdc', rr.toFixed(3), rr < 2 ? '' : rr < 5 ? 'warn' : 'danger');
+  setMetric('m-skinDepth', (a.skinDepth * 1e6).toFixed(1) + ' μm', 'white');
+  const pf = a.proxFactor;
+  setMetric('m-proxFactor', pf.toFixed(3), pf < 1.5 ? '' : pf < 3 ? 'warn' : 'danger');
+
+  const T = a.coilTemp;
+  setMetric('m-coilTemp', T.toFixed(1) + ' °C', T < 60 ? '' : T < 85 ? 'warn' : 'danger');
+  setMetric('m-thermalRho', state.rho.toExponential(3) + ' Ω·m', 'white');
+  const P = a.powerDissipated;
+  setMetric('m-powerDiss', P >= 1 ? P.toFixed(3) + ' W' : (P * 1000).toFixed(2) + ' mW', 'white');
+
+  const Q = a.Q;
+  const qStr = isFinite(Q) ? Q.toFixed(1) : '∞';
+  setMetric('m-qFactor', qStr, !isFinite(Q) || Q > 50 ? '' : Q > 10 ? 'warn' : 'danger');
+  setMetric('m-bCenter', (a.B_center * 1000).toFixed(4) + ' mT');
+  setMetric('m-bSurface', (a.B_surface * 1000).toFixed(4) + ' mT', 'white');
+  setMetric('m-gradBalance', a.gradBalance, state.gradEnabled ? 'warn' : 'muted');
+
+  // Warnings
+  const warnBox = document.getElementById('warnings-box');
+  if (a.warnings.length === 0) {
+    warnBox.innerHTML = '<div class="ok-box"><div class="ok-item">All parameters nominal</div></div>';
+  } else {
+    warnBox.innerHTML = '<div class="warning-box">' +
+      a.warnings.map(w => `<div class="warning-item">${w}</div>`).join('') +
+      '</div>';
+  }
+
+  // Top bar
+  document.getElementById('tb-L').textContent = fmtL(a.L_sys);
+  document.getElementById('tb-Q').textContent = isFinite(a.Q) ? a.Q.toFixed(1) : '∞';
+  document.getElementById('tb-SRF').textContent = formatFreq(a.SRF);
+  document.getElementById('tb-RAC').textContent = fmtR(a.R_AC);
+  document.getElementById('analytics-time').textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+
+// ============================================================
+// THREE.JS 3D RENDERING
+// ============================================================
+
+let threeScene, threeCamera, threeRenderer, threeControls;
+let coilMesh = null;
+
+function initThree() {
+  const container = document.getElementById('viewport-3d');
+  const canvas = document.getElementById('three-canvas');
+
+  threeScene = new THREE.Scene();
+  threeScene.background = new THREE.Color(0x060708);
+
+  const W = container.clientWidth, H = container.clientHeight;
+  threeCamera = new THREE.PerspectiveCamera(45, W / H, 0.0001, 100);
+  threeCamera.position.set(0.12, 0.08, 0.18);
+  threeCamera.lookAt(0, 0, 0);
+
+  threeRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  threeRenderer.setPixelRatio(window.devicePixelRatio);
+  threeRenderer.setSize(W, H);
+
+  // Lights
+  const ambLight = new THREE.AmbientLight(0x404060, 0.6);
+  threeScene.add(ambLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight.position.set(1, 1, 1);
+  threeScene.add(dirLight);
+  const backLight = new THREE.DirectionalLight(0x6688aa, 0.4);
+  backLight.position.set(-1, -0.5, -0.5);
+  threeScene.add(backLight);
+
+  // Grid helper
+  const gridHelper = new THREE.GridHelper(0.3, 10, 0x252840, 0x1a1d2e);
+  gridHelper.rotation.x = Math.PI / 2;
+  threeScene.add(gridHelper);
+
+  // Axis lines
+  const axMatZ = new THREE.LineBasicMaterial({ color: 0x3a5a7a });
+  const axGeoZ = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, -0.25), new THREE.Vector3(0, 0, 0.25)
+  ]);
+  threeScene.add(new THREE.Line(axGeoZ, axMatZ));
+
+  // Simple mouse orbit
+  let isDragging = false, lastMX = 0, lastMY = 0;
+  let spherical = { theta: 0.6, phi: 1.1, radius: 0.22 };
+
+  canvas.addEventListener('mousedown', e => { isDragging = true; lastMX = e.clientX; lastMY = e.clientY; });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    spherical.theta -= (e.clientX - lastMX) * 0.005;
+    spherical.phi -= (e.clientY - lastMY) * 0.005;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    lastMX = e.clientX; lastMY = e.clientY;
+    updateCamera();
+  });
+  canvas.addEventListener('wheel', e => {
+    spherical.radius *= (e.deltaY > 0) ? 1.1 : 0.9;
+    spherical.radius = Math.max(0.05, Math.min(2, spherical.radius));
+    updateCamera();
+    e.preventDefault();
+  }, { passive: false });
+
+  function updateCamera() {
+    threeCamera.position.x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+    threeCamera.position.y = spherical.radius * Math.cos(spherical.phi);
+    threeCamera.position.z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+    threeCamera.lookAt(0, 0, 0);
+  }
+  updateCamera();
+
+  // Resize
+  window.addEventListener('resize', () => {
+    const W = container.clientWidth, H = container.clientHeight;
+    threeCamera.aspect = W / H;
+    threeCamera.updateProjectionMatrix();
+    threeRenderer.setSize(W, H);
+  });
+
+  // Render loop
+  function animate() {
+    requestAnimationFrame(animate);
+    threeRenderer.render(threeScene, threeCamera);
+  }
+  animate();
+}
+
+function buildCoilPoints(offsetZ = 0, windMult = 1) {
+  const ky = state.wireDiameter + state.interLayerGap;
+  const SEGS_PER_TURN = 60;
+  const points = [];
+
+  for (let layer = 0; layer < state.numLayers; layer++) {
+    const R = state.innerRadius + layer * ky;
+    const zDir = (layer % 2 === 0) ? 1 : -1;
+    const zStart = zDir === 1 ? -state.length / 2 : state.length / 2;
+    const pitch = state.length / state.numTurns;
+    const total = state.numTurns * SEGS_PER_TURN;
+
+    for (let i = 0; i < total; i++) {
+      const t = (i / total) * 2 * Math.PI * state.numTurns;
+      const angle = windMult * zDir * t;
+      const z = zStart + zDir * (pitch / (2 * Math.PI)) * t;
+      points.push(new THREE.Vector3(
+        R * Math.cos(angle),
+        R * Math.sin(angle),
+        z + offsetZ
+      ));
+    }
+  }
+  return points;
+}
+
+function render3DCoil() {
+  // Remove old coil objects (keep lights/grid/axes)
+  const toRemove = [];
+  threeScene.children.forEach(c => { if (c.userData.isCoil) toRemove.push(c); });
+  toRemove.forEach(c => { threeScene.remove(c); if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); });
+
+  const copperMat = new THREE.MeshPhongMaterial({
+    color: 0xc47a30, emissive: 0x301800, specular: 0xffaa44, shininess: 80
+  });
+  const coil2Mat = new THREE.MeshPhongMaterial({
+    color: 0x8fbb50, emissive: 0x102000, specular: 0xaaff77, shininess: 60
+  });
+
+  function makeTubeMesh(pts, mat, rad) {
+    if (pts.length < 2) return;
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.5);
+    const tubeSeg = Math.min(pts.length * 2, 4000);
+    const geo = new THREE.TubeGeometry(curve, tubeSeg, rad, 6, false);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.userData.isCoil = true;
+    threeScene.add(mesh);
+  }
+
+  const wireRad = state.wireDiameter / 2 * 0.85;
+
+  if (state.gradEnabled) {
+    const c2c = state.coilSpacing + state.length;
+    const windMult2 = state.polarity === 'Opposing' ? -1 : 1;
+    const pts1 = buildCoilPoints(-c2c / 2, 1);
+    const pts2 = buildCoilPoints(c2c / 2, windMult2);
+    makeTubeMesh(pts1, copperMat, wireRad);
+    makeTubeMesh(pts2, coil2Mat, wireRad);
+
+    // Connector wire
+    if (pts1.length > 0 && pts2.length > 0) {
+      const last1 = pts1[pts1.length - 1];
+      const first2 = pts2[0];
+      const connGeo = new THREE.BufferGeometry().setFromPoints([last1, first2]);
+      const connLine = new THREE.Line(connGeo, new THREE.LineBasicMaterial({ color: 0x888888, linewidth: 1 }));
+      connLine.userData.isCoil = true;
+      threeScene.add(connLine);
+    }
+  } else {
+    const pts = buildCoilPoints(0, 1);
+    makeTubeMesh(pts, copperMat, wireRad);
+  }
+
+  // Bounding circles
+  const outerR = state.innerRadius + (state.numLayers - 1) * (state.wireDiameter + state.interLayerGap) + state.wireDiameter;
+  const markerR = outerR * 1.25;
+  const ringMat = new THREE.LineBasicMaterial({ color: 0x253550 });
+  function makeRing(z) {
+    const pts = [];
+    for (let i = 0; i <= 64; i++) {
+      const a = (i / 64) * Math.PI * 2;
+      pts.push(new THREE.Vector3(markerR * Math.cos(a), markerR * Math.sin(a), z));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.Line(geo, ringMat);
+    line.userData.isCoil = true;
+    threeScene.add(line);
+  }
+
+  if (state.gradEnabled) {
+    const c2c = state.coilSpacing + state.length;
+    makeRing(-c2c / 2 + state.length / 2);
+    makeRing(-c2c / 2 - state.length / 2);
+    makeRing(c2c / 2 + state.length / 2);
+    makeRing(c2c / 2 - state.length / 2);
+  } else {
+    makeRing(state.length / 2);
+    makeRing(-state.length / 2);
+  }
+}
+
+// ============================================================
+// MAIN UPDATE
+// ============================================================
+
+let updateTimer = null;
+function scheduleUpdate() {
+  clearTimeout(updateTimer);
+  updateTimer = setTimeout(updateAll, 60);
+}
+
+function updateAll() {
+  readUI();
+  const a = computeWithThermal();
+  lastAnalytics = a;
+  updateAnalyticsDisplay(a);
+  render3DCoil();
+  renderAxialChart(a);
+  renderImpedanceSweep();
+  renderResistanceSweep();
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+// ============================================================
+// EXPORT CSV
+// ============================================================
+
+function exportCSV() {
+  readUI();
+  const a = computeWithThermal();
+  const rows = [
+    ['Parameter', 'Value', 'Unit'],
+    ['Inductance (system)', a.L_sys.toExponential(6), 'H'],
+    ['Mutual Inductance', a.mutualL.toExponential(6), 'H'],
+    ['Self-Capacitance', a.C.toExponential(6), 'F'],
+    ['SRF', isFinite(a.SRF) ? a.SRF.toFixed(2) : 'inf', 'Hz'],
+    ['R_DC', a.R_DC.toExponential(6), 'Ohm'],
+    ['R_AC', a.R_AC.toExponential(6), 'Ohm'],
+    ['Q Factor', isFinite(a.Q) ? a.Q.toFixed(2) : 'inf', ''],
+    ['B center', a.B_center.toExponential(6), 'T'],
+    ['B surface', a.B_surface.toExponential(6), 'T'],
+    ['Z_mag', a.Z_mag.toFixed(4), 'Ohm'],
+    ['Z_phase', a.Z_phase.toFixed(2), 'deg'],
+    ['Fill Factor', a.fillFactor.toFixed(4), ''],
+    ['Wire Length', a.wireLen.toFixed(4), 'm'],
+    ['Skin Depth', a.skinDepth.toExponential(4), 'm'],
+    ['Coil Temp', a.coilTemp.toFixed(1), 'degC'],
+    ['P_dissipated', a.powerDissipated.toFixed(6), 'W'],
+  ];
+  const csvContent = rows.map(r => r.join(',')).join('\n');
+  downloadText('solenoid_analytics.csv', csvContent, 'text/csv');
+}
+
+// ============================================================
+// EXPORT SPICE
+// ============================================================
+
+function exportSPICE() {
+  readUI();
+  const a = computeWithThermal();
+  let text = `* Solenoid Designer Pro v5.0 - SPICE Netlist\n`;
+  text += `* Generated: ${new Date().toISOString()}\n`;
+  text += `* Gradiometric: ${state.gradEnabled}\n*\n`;
+
+  if (!state.gradEnabled) {
+    text += `* Single Coil RLC Model\n`;
+    text += `R1 1 2 ${a.R_AC.toExponential(6)}\n`;
+    text += `L1 2 3 ${a.L_sys.toExponential(6)}\n`;
+    text += `C1 1 3 ${a.C.toExponential(6)}\n`;
+    text += `.ends\n`;
+  } else {
+    const R_half = a.R_AC / 2;
+    const L_half = a.L_sys / 2;
+    const C_each = a.C * 2;
+    text += `* Gradiometric Coil Pair - Polarity: ${state.polarity}\n`;
+    text += `R1 1 2 ${R_half.toExponential(6)}\n`;
+    text += `L1 2 3 ${L_half.toExponential(6)}\n`;
+    text += `C1 1 3 ${C_each.toExponential(6)}\n`;
+    text += `R2 3 4 ${R_half.toExponential(6)}\n`;
+    text += `L2 4 5 ${L_half.toExponential(6)}\n`;
+    text += `C2 3 5 ${C_each.toExponential(6)}\n`;
+    if (a.mutualL > 0) {
+      let k = a.couplingCoeff;
+      if (state.polarity === 'Opposing') k = -k;
+      text += `K1 L1 L2 ${k.toFixed(6)}\n`;
+    }
+    text += `.ends\n`;
+  }
+
+  document.getElementById('spice-text').value = text;
+  document.getElementById('spice-modal').classList.remove('hidden');
+}
+
+let spiceDownloadText = '';
+function downloadSpice() {
+  const text = document.getElementById('spice-text').value;
+  downloadText('solenoid_model.cir', text, 'text/plain');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+function downloadText(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// MONTE CARLO
+// ============================================================
+
+async function runMonteCarlo() {
+  readUI();
+  const nTrials = state.mcTrials;
+  const tol = state.mcTol;
+
+  const orig = {
+    innerRadius: state.innerRadius,
+    length: state.length,
+    wireDiameter: state.wireDiameter,
+    condDiameter: state.condDiameter,
+  };
+
+  const L_mc = [], SRF_mc = [], Q_mc = [], Rac_mc = [];
+
+  document.getElementById('progress-overlay').classList.remove('hidden');
+  const fill = document.getElementById('progress-fill');
+  const pct = document.getElementById('progress-pct');
+
+  const CHUNK = 20;
+  for (let i = 0; i < nTrials; i += CHUNK) {
+    for (let j = i; j < Math.min(i + CHUNK, nTrials); j++) {
+      state.innerRadius = orig.innerRadius * (1 + tol * (2 * Math.random() - 1));
+      state.length      = orig.length * (1 + tol * (2 * Math.random() - 1));
+      const wScale = 1 + tol * (2 * Math.random() - 1);
+      state.wireDiameter = orig.wireDiameter * wScale;
+      state.condDiameter = orig.condDiameter * wScale;
+
+      const a = calculateAnalytics();
+      L_mc.push(a.L_sys);
+      SRF_mc.push(isFinite(a.SRF) ? a.SRF : 0);
+      Q_mc.push(isFinite(a.Q) ? a.Q : 0);
+      Rac_mc.push(a.R_AC);
+    }
+    const p = Math.round(Math.min(i + CHUNK, nTrials) / nTrials * 100);
+    fill.style.width = p + '%';
+    pct.textContent = p + '%';
+    await new Promise(r => setTimeout(r, 0));
+  }
+
+  // Restore
+  state.innerRadius = orig.innerRadius;
+  state.length = orig.length;
+  state.wireDiameter = orig.wireDiameter;
+  state.condDiameter = orig.condDiameter;
+  updateAll();
+
+  document.getElementById('progress-overlay').classList.add('hidden');
+
+  // Show results
+  mcCharts.forEach(c => c.destroy());
+  mcCharts = [];
+  const chartsDiv = document.getElementById('mc-charts');
+  chartsDiv.innerHTML = '';
+
+  const datasets = [
+    { label: 'Inductance (H)', data: L_mc, color: '#1a8fd1' },
+    { label: 'SRF (Hz)', data: SRF_mc, color: '#2eb872' },
+    { label: 'Q Factor', data: Q_mc, color: '#f0a820' },
+    { label: 'R_AC (Ω)', data: Rac_mc, color: '#e04040' },
+  ];
+
+  datasets.forEach(ds => {
+    const box = document.createElement('div');
+    box.className = 'mc-chart-box';
+    const canv = document.createElement('canvas');
+    box.appendChild(canv);
+    chartsDiv.appendChild(box);
+
+    const mu = ds.data.reduce((a, b) => a + b, 0) / ds.data.length;
+    const std = Math.sqrt(ds.data.reduce((a, b) => a + (b - mu) ** 2, 0) / ds.data.length);
+    const bins = 20;
+    const minV = Math.min(...ds.data), maxV = Math.max(...ds.data);
+    const binW = (maxV - minV) / bins;
+    const counts = new Array(bins).fill(0);
+    ds.data.forEach(v => {
+      const idx = Math.min(Math.floor((v - minV) / binW), bins - 1);
+      counts[idx]++;
+    });
+    const labels = counts.map((_, i) => (minV + (i + 0.5) * binW).toExponential(2));
+
+    const chart = new Chart(canv, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: `${ds.label} (μ=${mu.toExponential(2)}, σ=${std.toExponential(2)})`,
+          data: counts, backgroundColor: ds.color + 'aa', borderColor: ds.color, borderWidth: 1 }]
+      },
+      options: {
+        animation: false, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8a8fa8', font: { size: 9 } } } },
+        scales: {
+          x: { ticks: { color: '#505568', font: { size: 8 }, maxTicksLimit: 5 }, grid: { color: '#1a1d2e' } },
+          y: { ticks: { color: '#505568', font: { size: 8 } }, grid: { color: '#1a1d2e' } }
+        }
+      }
+    });
+    mcCharts.push(chart);
+  });
+
+  document.getElementById('mc-modal').classList.remove('hidden');
+}
+
+// ============================================================
+// RESET DEFAULTS
+// ============================================================
+
+function resetDefaults() {
+  document.getElementById('p-innerRadius').value = 22;
+  document.getElementById('p-length').value = 100;
+  document.getElementById('p-numTurns').value = 82;
+  document.getElementById('p-numLayers').value = 2;
+  document.getElementById('p-wireDiameter').value = 1.2;
+  document.getElementById('p-condDiameter').value = 1.1;
+  document.getElementById('p-interLayerGap').value = 0.1;
+  document.getElementById('p-wireType').value = 'Solid';
+  document.getElementById('p-litzStrands').value = 125;
+  document.getElementById('p-strandDiam').value = 80;
+  document.getElementById('p-current').value = 1.0;
+  document.getElementById('p-frequency').value = 3;
+  document.getElementById('p-gradEnabled').checked = false;
+  document.getElementById('p-coilSpacing').value = 20;
+  document.getElementById('p-polarity').value = 'Opposing';
+  document.getElementById('p-thermalEnabled').checked = false;
+  document.getElementById('p-ambientTemp').value = 25;
+  document.getElementById('p-thermalResist').value = 15;
+  document.getElementById('p-sweepStart').value = 1;
+  document.getElementById('p-sweepEnd').value = 10000;
+  document.getElementById('p-mcTrials').value = 300;
+  document.getElementById('p-mcTol').value = 1;
+  updateAll();
+}
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+
+document.querySelectorAll('input, select').forEach(el => {
+  el.addEventListener('change', scheduleUpdate);
+  el.addEventListener('input', scheduleUpdate);
+});
+
+document.getElementById('p-wireType').addEventListener('change', function() {
+  const isLitz = this.value === 'Litz';
+  document.getElementById('litz-params').style.opacity = isLitz ? '1' : '0.35';
+  document.querySelectorAll('#litz-params input').forEach(i => i.disabled = !isLitz);
+});
+
+// Hide litz params initially
+document.getElementById('litz-params').style.opacity = '0.35';
+document.querySelectorAll('#litz-params input').forEach(i => i.disabled = true);
+
+// ============================================================
+// INIT
+// ============================================================
+
+window.addEventListener('DOMContentLoaded', () => {
+  initThree();
+  updateAll();
+});
+</script>
+</body>
+</html>
